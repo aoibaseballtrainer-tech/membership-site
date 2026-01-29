@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Renderへのデプロイ（代替案）
+
+echo "📝 Renderへのデプロイ手順:"
+echo ""
+echo "1. https://render.com にアクセス"
+echo "2. 'Get Started for Free' をクリック"
+echo "3. GitHubアカウントでログイン（またはメールで登録）"
+echo ""
+echo "バックエンド:"
+echo "  - New → Web Service"
+echo "  - GitHubリポジトリを接続"
+echo "  - Root Directory: server"
+echo "  - Build Command: npm install && npm run build"
+echo "  - Start Command: node dist/index.js"
+echo "  - Environment Variables:"
+echo "    PORT=5001"
+echo "    NODE_ENV=production"
+echo "    JWT_SECRET=$(openssl rand -hex 32)"
+echo ""
+echo "フロントエンド:"
+echo "  - New → Static Site"
+echo "  - Root Directory: client"
+echo "  - Build Command: npm install && npm run build"
+echo "  - Publish Directory: client/build"
+echo "  - Environment Variables:"
+echo "    REACT_APP_API_URL=https://your-backend.onrender.com/api"

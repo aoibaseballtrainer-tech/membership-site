@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>めんたるサロン｜会員サイト構想（要件整理）</title>
+  <meta name="description" content="めんたるサロンの会員サイト（データ入力・蓄積・可視化・管理者閲覧）の要件整理ドキュメント" />
+  <style>
+    :root { --bg:#0b0c10; --card:#14161c; --text:#e9eef5; --muted:#a8b0bf; --line:#2a2f3a; --accent:#6ae4ff; }
+    body { margin:0; font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; background:var(--bg); color:var(--text); }
+    header { padding:32px 20px; border-bottom:1px solid var(--line); }
+    h1 { margin:0 0 8px; font-size:22px; letter-spacing:0.2px; }
+    .sub { margin:0; color:var(--muted); line-height:1.6; }
+    main { max-width:980px; margin:0 auto; padding:20px; display:grid; gap:16px; }
+    section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
+    h2 { margin:0 0 10px; font-size:16px; color:var(--accent); }
+    h3 { margin:14px 0 8px; font-size:14px; }
+    ul { margin:0; padding-left:18px; color:var(--text); line-height:1.8; }
+    li small { color:var(--muted); }
+    .grid { display:grid; gap:12px; grid-template-columns: 1fr; }
+    @media (min-width: 860px){ .grid { grid-template-columns: 1fr 1fr; } }
+    .pill { display:inline-block; font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px; color:var(--muted); }
+    .note { color:var(--muted); line-height:1.7; }
+    .kpi { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    footer { max-width:980px; margin:0 auto; padding:24px 20px 40px; color:var(--muted); }
+    code { background:#0f1116; border:1px solid var(--line); padding:2px 6px; border-radius:8px; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>めんたるサロン｜会員サイト構想（要件整理）</h1>
+    <p class="sub">
+      目的：会員が自分の事業データを入力 → 蓄積 → グラフ/表で可視化。<br />
+      管理者（小川さん）は全会員データを一覧把握し、成長状況・課題を見える化する。
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>1. 主要要件（今回のゴール）</h2>
+      <div class="grid">
+        <div>
+          <h3>会員側（入力・閲覧）</h3>
+          <ul>
+            <li>会員ログイン（会員限定）</li>
+            <li>自分の事業データを入力できる（フォーム入力）</li>
+            <li>入力したデータを蓄積し、推移をグラフ/表で見れる</li>
+          </ul>
+        </div>
+        <div>
+          <h3>管理者側（全体把握）</h3>
+          <ul>
+            <li>全会員のデータを一覧で見れる（表・フィルタ）</li>
+            <li>会員ごとの履歴ページを見れる</li>
+            <li>入力状況（入力済/未入力）を把握できる</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">
+        ※将来的に <span class="pill">自動連携（広告/SNS/解析）</span> や <span class="pill">AIによる改善提案</span> を追加して
+        「オンラインサロン」→「経営インフラ」へ拡張する想定。
+      </p>
+    </section>
+
+    <section>
+      <h2>2. 会員が入力するデータ例</h2>
+      <div class="grid">
+        <div>
+          <h3>売上 / 商品</h3>
+          <ul>
+            <li>月次売上（総売上）</li>
+            <li>商品情報（商品名、単価、粗利、成約数 など）</li>
+          </ul>
+
+          <h3>集客</h3>
+          <ul>
+            <li>のべ集客数</li>
+            <li>新規集客数</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>広告</h3>
+          <ul>
+            <li>広告費</li>
+            <li>CPA / CPL / ROAS（わかる範囲で）</li>
+          </ul>
+
+          <h3>SNS</h3>
+          <ul>
+            <li>フォロワー数（増減）</li>
+            <li>表示回数 / リーチ / 投稿数（任意）</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">
+        入力形式の優先順位：<br />
+        ①フォーム入力（最優先） → ②CSVアップロード（上級者向け） → ③API連携（拡張フェーズ）
+      </p>
+    </section>
+
+    <section>
+      <h2>3. 可視化（会員側ダッシュボードのイメージ）</h2>
+      <ul>
+        <li>月別推移：売上 / 新規集客 / 広告費 / フォロワー増減</li>
+        <li>期間切替：今月・先月・過去3ヶ月・過去1年</li>
+        <li>表：月次の入力履歴（編集・追記）</li>
+      </ul>
+      <div class="kpi">
+        <span class="pill">推移グラフ</span>
+        <span class="pill">月次テーブル</span>
+        <span class="pill">期間フィルタ</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 管理者画面（小川さん用）</h2>
+      <ul>
+        <li>会員一覧（検索・並び替え）</li>
+        <li>全会員の月次データ一覧（表で一括把握）</li>
+        <li>入力未実施者の抽出（リマインド対象）</li>
+        <li>ランキング（売上伸び率、広告効率、SNS伸び率など）</li>
+        <li>異常値の発見（広告費だけ急増、売上急落など）</li>
+      </ul>
+      <p class="note">
+        管理者権限：<code>admin</code> / 会員権限：<code>member</code> のようにロール分離する想定。
+      </p>
+    </section>
+
+    <section>
+      <h2>5. 実装パターン（選択肢）</h2>
+      <div class="grid">
+        <div>
+          <h3>パターンA：WordPress（最速）</h3>
+          <ul>
+            <li>短期で立ち上げやすい</li>
+            <li>ただし分析・拡張で限界が来やすい</li>
+          </ul>
+        </div>
+        <div>
+          <h3>パターンB：Webアプリ（理想）</h3>
+          <ul>
+            <li>Next.js + DB（例：Supabase）</li>
+            <li>管理者ダッシュボード/分析の自由度が高い</li>
+            <li>将来のAI示唆・API連携に強い</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">
+        MVP（最小構成）で始めるなら：<br />
+        会員ログイン → 月次入力（売上/新規/広告/SNS） → 会員の推移表示 → 管理者の全員一覧
+      </p>
+    </section>
+
+    <section>
+      <h2>6. 次に決めると失敗しにくい項目</h2>
+      <ul>
+        <li>会員数の想定（初月〜6ヶ月）</li>
+        <li>入力頻度（週次 or 月次）</li>
+        <li>決済の位置づけ（外部で課金して紐付ける / サイト内で完結）</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div>更新日：2026-01-28</div>
+    <div class="note">このHTMLは「要件整理」用の叩き台です。画面設計（ワイヤー）やDB設計に落とし込むと開発に移れます。</div>
+  </footer>
+</body>
+</html>
