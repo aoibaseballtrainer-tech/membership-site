@@ -22,6 +22,10 @@ interface BusinessData {
   year: number;
   month: number;
   totalRevenue: number | null;
+  productName: string | null;
+  productPrice: number | null;
+  productProfit: number | null;
+  productSalesCount: number | null;
   totalLeads: number | null;
   newLeads: number | null;
   adSpend: number | null;
@@ -394,7 +398,11 @@ function Dashboard() {
                     <thead>
                       <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e0e0e0' }}>
                         <th style={{ padding: '12px', textAlign: 'left' }}>年月</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>商品名</th>
                         <th style={{ padding: '12px', textAlign: 'right' }}>売上</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>商品単価</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>粗利</th>
+                        <th style={{ padding: '12px', textAlign: 'right' }}>成約数</th>
                         <th style={{ padding: '12px', textAlign: 'right' }}>新規集客</th>
                         <th style={{ padding: '12px', textAlign: 'right' }}>広告費</th>
                         <th style={{ padding: '12px', textAlign: 'right' }}>フォロワー</th>
@@ -411,8 +419,20 @@ function Dashboard() {
                             <td style={{ padding: '12px' }}>
                               {item.year}/{item.month}
                             </td>
+                            <td style={{ padding: '12px', textAlign: 'left' }}>
+                              {item.productName || '-'}
+                            </td>
                             <td style={{ padding: '12px', textAlign: 'right' }}>
                               {item.totalRevenue ? item.totalRevenue.toLocaleString() : '-'}
+                            </td>
+                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                              {item.productPrice ? item.productPrice.toLocaleString() : '-'}
+                            </td>
+                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                              {item.productProfit ? item.productProfit.toLocaleString() : '-'}
+                            </td>
+                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                              {item.productSalesCount ? item.productSalesCount.toLocaleString() : '-'}
                             </td>
                             <td style={{ padding: '12px', textAlign: 'right' }}>
                               {item.newLeads || '-'}
