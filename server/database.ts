@@ -1,9 +1,29 @@
 import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import path from 'path';
+import fs from 'fs';
 
-const dbPath = path.join(__dirname, 'members.db');
-const db = new sqlite3.Database(dbPath);
+// データベースディレクトリの設定
+// Render Diskを使用する場合: /opt/render/project/src/server/data
+// ローカル開発の場合: __dirname
+const dbDir = process.env.DATABASE_DIR || path.join(__dirname, 'data');
+const dbPath = path.join(dbDir, 'members.db');
+
+// データベースディレクトリが存在しない場合は作成
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`データベースディレクトリを作成しました: ${dbDir}`);
+}
+
+console.log(`データベースパス: ${dbPath}`);
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('データベース接続エラー:', err);
+  } else {
+    console.log('データベースに接続しました');
+  }
+});
 
 // Promise化（型定義付き）
 export function dbRun(sql: string, params: any[] = []): Promise<sqlite3.RunResult> {
