@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { dbGet, dbRun, dbAll } from '../database';
 import { body, validationResult } from 'express-validator';
 import { sendApprovalEmail, sendRejectionEmail } from '../utils/email';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -178,5 +179,82 @@ router.post(
     }
   }
 );
+
+// 管理者によるユーザー追加
+router.post(
+  '/create-user',
+  authenticateToken,
+  checkAdmin,
+  [
+    body('email').isEmail().withMessage('有効なメールアドレスを入力してください'),
+    body('password').isLength({ min: 6 }).withMessage('パスワードは6文字以上である必要があります'),
+    body('name').notEmpty().withMessage('名前を入力してください'),
+    body('membershipType').optional().isIn(['basic', 'vip', 'admin']).withMessage('有効な会員タイプを指定してください'),
+  ],
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { email, password, name, membershipType = 'basic' } = req.body;
+
+      // 既存ユーザーチェック
+      const existingUser = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+      if (existingUser) {
+        return res.status(400).json({ error: 'このメールアドレスは既に登録されています' });
+      }
+
+      // パスワードハッシュ化
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // ユーザー作成（承認済みステータス）
+      const result = await dbRun(
+        'INSERT INTO users (email, password, name, status) VALUES (?, ?, ?, ?)',
+        [email, hashedPassword, name, 'approved']
+      );
+
+      // 会員プロフィール作成
+      await dbRun(
+        'INSERT INTO member_profiles (userId, membershipType, status) VALUES (?, ?, ?)',
+        [result.lastID, membershipType, 'active']
+      );
+
+      // 承認完了メールを送信
+      await sendApprovalEmail(email, name);
+
+      const newUser = await dbGet('SELECT id, email, name, status FROM users WHERE id = ?', [result.lastID]);
+      res.status(201).json({ message: 'ユーザーを作成しました', user: newUser });
+    } catch (error) {
+      console.error('ユーザー作成エラー:', error);
+      res.status(500).json({ error: 'サーバーエラーが発生しました' });
+    }
+  }
+);
+
+// ユーザー削除
+router.delete('/delete-user/:userId', authenticateToken, checkAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    // ユーザー存在確認
+    const user = await dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    // 会員プロフィールを削除
+    await dbRun('DELETE FROM member_profiles WHERE userId = ?', [userId]);
+    
+    // ユーザーを削除
+    await dbRun('DELETE FROM users WHERE id = ?', [userId]);
+
+    res.json({ message: 'ユーザーを削除しました' });
+  } catch (error) {
+    console.error('ユーザー削除エラー:', error);
+    res.status(500).json({ error: 'サーバーエラーが発生しました' });
+  }
+});
 
 export { router as adminRoutes };

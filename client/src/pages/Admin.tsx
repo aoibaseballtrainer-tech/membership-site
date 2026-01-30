@@ -39,6 +39,13 @@ function Admin() {
     category: 'wall_hitting' as 'wall_hitting' | 'lecture' | 'other',
     description: '',
   });
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [userFormData, setUserFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    membershipType: 'basic' as 'basic' | 'vip' | 'admin',
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -191,6 +198,43 @@ function Admin() {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      await axios.post(
+        `${API_URL}/admin/create-user`,
+        userFormData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSuccess('ユーザーを作成しました');
+      setShowUserForm(false);
+      setUserFormData({ name: '', email: '', password: '', membershipType: 'basic' });
+      fetchUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'ユーザーの作成に失敗しました');
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!window.confirm('このユーザーを削除しますか？この操作は取り消せません。')) {
+      return;
+    }
+    try {
+      await axios.delete(`${API_URL}/admin/delete-user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess('ユーザーを削除しました');
+      fetchUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'ユーザーの削除に失敗しました');
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -261,7 +305,79 @@ function Admin() {
           </div>
 
           <div style={{ marginTop: '40px' }}>
-            <h2>全会員一覧</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>全会員一覧</h2>
+              <button
+                onClick={() => {
+                  setShowUserForm(!showUserForm);
+                  setUserFormData({ name: '', email: '', password: '', membershipType: 'basic' });
+                }}
+                className="btn btn-primary"
+                style={{ width: 'auto', padding: '10px 20px' }}
+              >
+                {showUserForm ? 'フォームを閉じる' : 'ユーザーを追加'}
+              </button>
+            </div>
+
+            {showUserForm && (
+              <form onSubmit={handleCreateUser} style={{ marginBottom: '30px', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <h3 style={{ marginBottom: '20px' }}>ユーザーを追加</h3>
+                <div className="form-group">
+                  <label>名前</label>
+                  <input
+                    type="text"
+                    value={userFormData.name}
+                    onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>メールアドレス</label>
+                  <input
+                    type="email"
+                    value={userFormData.email}
+                    onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>パスワード（6文字以上）</label>
+                  <input
+                    type="password"
+                    value={userFormData.password}
+                    onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>会員タイプ</label>
+                  <select
+                    value={userFormData.membershipType}
+                    onChange={(e) => setUserFormData({ ...userFormData, membershipType: e.target.value as any })}
+                    required
+                  >
+                    <option value="basic">Basic</option>
+                    <option value="vip">VIP</option>
+                    <option value="admin">管理者</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ marginRight: '10px' }}>
+                  追加
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUserForm(false);
+                    setUserFormData({ name: '', email: '', password: '', membershipType: 'basic' });
+                  }}
+                  className="btn btn-secondary"
+                >
+                  キャンセル
+                </button>
+              </form>
+            )}
+
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
                 <thead>
@@ -337,24 +453,33 @@ function Admin() {
                         {new Date(user.createdAt).toLocaleDateString('ja-JP')}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {user.status === 'approved' && (
-                          <select
-                            value={user.membershipType || 'basic'}
-                            onChange={(e) => handleUpdateMembershipType(user.id, e.target.value)}
-                            style={{
-                              padding: '6px 12px',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              fontSize: '14px',
-                              background: 'white',
-                              cursor: 'pointer',
-                            }}
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+                          {user.status === 'approved' && (
+                            <select
+                              value={user.membershipType || 'basic'}
+                              onChange={(e) => handleUpdateMembershipType(user.id, e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                background: 'white',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <option value="basic">Basic</option>
+                              <option value="vip">VIP</option>
+                              <option value="admin">管理者</option>
+                            </select>
+                          )}
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="btn btn-secondary"
+                            style={{ width: 'auto', padding: '6px 12px', fontSize: '12px' }}
                           >
-                            <option value="basic">Basic</option>
-                            <option value="vip">VIP</option>
-                            <option value="admin">管理者</option>
-                          </select>
-                        )}
+                            削除
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
