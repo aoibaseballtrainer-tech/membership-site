@@ -5,8 +5,14 @@ import fs from 'fs';
 
 // データベースディレクトリの設定
 // Render Diskを使用する場合: /opt/render/project/src/server/data
-// ローカル開発の場合: __dirname
-const dbDir = process.env.DATABASE_DIR || path.join(__dirname, 'data');
+// ローカル開発の場合: __dirname/data
+// 環境変数で指定されていない場合は、Render環境を自動検出
+const isRender = process.env.RENDER || process.env.RENDER_EXTERNAL_URL;
+const defaultDbDir = isRender 
+  ? '/opt/render/project/src/server/data'  // Render Diskのマウントポイント
+  : path.join(__dirname, 'data');          // ローカル開発時
+
+const dbDir = process.env.DATABASE_DIR || defaultDbDir;
 const dbPath = path.join(dbDir, 'members.db');
 
 // データベースディレクトリが存在しない場合は作成
@@ -15,13 +21,23 @@ if (!fs.existsSync(dbDir)) {
   console.log(`データベースディレクトリを作成しました: ${dbDir}`);
 }
 
+console.log(`データベースディレクトリ: ${dbDir}`);
 console.log(`データベースパス: ${dbPath}`);
+console.log(`Render環境: ${isRender ? 'Yes' : 'No'}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('データベース接続エラー:', err);
   } else {
     console.log('データベースに接続しました');
+    // データベースファイルの存在確認
+    fs.access(dbPath, fs.constants.F_OK, (err) => {
+      if (err) {
+        console.log('データベースファイルは新規作成されます');
+      } else {
+        console.log('既存のデータベースファイルを使用します');
+      }
+    });
   }
 });
 
