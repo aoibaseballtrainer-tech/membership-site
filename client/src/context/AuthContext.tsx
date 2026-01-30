@@ -20,6 +20,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
+// 本番環境でAPI_URLが設定されていない場合の警告
+if (process.env.NODE_ENV === 'production' && !process.env.REACT_APP_API_URL) {
+  console.warn('REACT_APP_API_URL環境変数が設定されていません。API呼び出しが失敗する可能性があります。');
+}
+
+// axiosのデフォルトタイムアウトを設定
+axios.defaults.timeout = 10000; // 10秒
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -40,34 +48,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await axios.get(`${API_URL}/auth/verify`, {
         headers: { Authorization: `Bearer ${tokenToVerify}` },
+        timeout: 10000, // 10秒でタイムアウト
       });
       setUser(response.data.user);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Token verification failed:', error);
+      // エラーが発生した場合、トークンを削除
       localStorage.removeItem('token');
       setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-    const { token: newToken, user: newUser } = response.data;
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password }, {
+        timeout: 10000, // 10秒でタイムアウト
+      });
+      const { token: newToken, user: newUser } = response.data;
+      setToken(newToken);
+      setUser(newUser);
+      localStorage.setItem('token', newToken);
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      throw error;
+    }
   };
 
   const register = async (email: string, password: string, name: string) => {
-    const response = await axios.post(`${API_URL}/auth/register`, {
-      email,
-      password,
-      name,
-    });
-    const { token: newToken, user: newUser } = response.data;
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        email,
+        password,
+        name,
+      }, {
+        timeout: 10000, // 10秒でタイムアウト
+      });
+      const { token: newToken, user: newUser } = response.data;
+      setToken(newToken);
+      setUser(newUser);
+      localStorage.setItem('token', newToken);
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
   };
 
   const logout = () => {
