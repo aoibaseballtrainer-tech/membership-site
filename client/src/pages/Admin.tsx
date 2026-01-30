@@ -69,8 +69,14 @@ function Admin() {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
-      setPendingUsers(pendingRes.data.users || []);
-      setAllUsers(allRes.data.users || []);
+      const pendingUsersData = pendingRes.data.users || [];
+      const allUsersData = allRes.data.users || [];
+      
+      console.log('承認待ちユーザー数:', pendingUsersData.length);
+      console.log('全会員数:', allUsersData.length);
+      
+      setPendingUsers(pendingUsersData);
+      setAllUsers(allUsersData);
       
       // 管理者権限を確認（レスポンスが成功した場合は管理者）
       setIsAdmin(true);
@@ -338,7 +344,7 @@ function Admin() {
 
           <div style={{ marginTop: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>全会員一覧</h2>
+              <h2>全会員一覧 ({allUsers.length}人)</h2>
               <button
                 onClick={() => {
                   setShowUserForm(!showUserForm);

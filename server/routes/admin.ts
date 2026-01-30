@@ -50,6 +50,7 @@ router.get('/pending-users', authenticateToken, checkAdmin, async (req: AuthRequ
       'SELECT id, email, name, status, createdAt FROM users WHERE status = ? ORDER BY createdAt DESC',
       ['pending']
     );
+    console.log(`承認待ちユーザー数: ${users.length}`);
     res.json({ users });
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
@@ -144,6 +145,8 @@ router.get('/all-users', authenticateToken, checkAdmin, async (req: AuthRequest,
        LEFT JOIN member_profiles mp ON u.id = mp.userId 
        ORDER BY u.createdAt DESC`
     );
+    console.log(`全会員数: ${users.length}`);
+    console.log('ユーザー一覧:', users.map(u => ({ id: u.id, email: u.email, name: u.name, status: u.status })));
     res.json({ users });
   } catch (error) {
     console.error('ユーザー一覧取得エラー:', error);
