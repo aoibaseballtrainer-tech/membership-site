@@ -5,6 +5,7 @@ import { authRoutes } from './routes/auth';
 import { memberRoutes } from './routes/members';
 import { businessRoutes } from './routes/business';
 import { adminRoutes } from './routes/admin';
+import { youtubeRoutes } from './routes/youtube';
 import { initDatabase, dbGet, dbRun } from './database';
 import bcrypt from 'bcryptjs';
 
@@ -79,6 +80,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/youtube', youtubeRoutes);
 
 // ヘルスチェック
 app.get('/api/health', (req, res) => {

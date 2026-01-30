@@ -1,0 +1,53 @@
+========================================
+Renderデプロイ - クイックガイド
+========================================
+
+【ステップ1】GitHubリポジトリを作成
+----------------------------------------
+1. https://github.com にログイン
+2. 右上の "+" → "New repository"
+3. Repository name: membership-site
+4. Public を選択
+5. "Create repository" をクリック
+
+【ステップ2】プロジェクトをGitHubにプッシュ
+----------------------------------------
+ターミナルで実行:
+
+cd /Users/aoi/membership-site
+git remote add origin https://github.com/あなたのユーザー名/membership-site.git
+git branch -M main
+git push -u origin main
+
+【ステップ3】Renderでバックエンドをデプロイ
+----------------------------------------
+1. https://render.com にログイン
+2. "New +" → "Web Service"
+3. GitHubリポジトリを接続
+4. 設定:
+   Name: membership-site-backend
+   Root Directory: server
+   Build Command: npm install && npm run build
+   Start Command: node dist/index.js
+5. Environment Variables:
+   PORT = 5001
+   NODE_ENV = production
+   JWT_SECRET = 531c99a7ba2313c3f685c7ac0fb6aeddbdcbb2d0eb3981177c414fa928677528
+6. "Create Web Service" をクリック
+7. デプロイ完了後、URLをコピー
+
+【ステップ4】Renderでフロントエンドをデプロイ
+----------------------------------------
+1. "New +" → "Static Site"
+2. 同じGitHubリポジトリを接続
+3. 設定:
+   Name: membership-site-frontend
+   Root Directory: client
+   Build Command: npm install && npm run build
+   Publish Directory: client/build
+4. Environment Variables:
+   REACT_APP_API_URL = https://membership-site-backend.onrender.com/api
+   （ステップ3のURLを使用）
+5. "Create Static Site" をクリック
+
+完了！

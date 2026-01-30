@@ -92,6 +92,19 @@ export function initDatabase() {
       )
     `);
 
+    // YouTubeリンクテーブル
+    db.run(`
+      CREATE TABLE IF NOT EXISTS youtube_links (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        url TEXT NOT NULL,
+        category TEXT NOT NULL CHECK(category IN ('wall_hitting', 'lecture', 'other')),
+        description TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('データベースが初期化されました');
   });
 }

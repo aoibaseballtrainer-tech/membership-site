@@ -7,11 +7,12 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <h1>会員サイト</h1>
+      <h1>めんたるサロン</h1>
       <div className="navbar-nav">
         {user ? (
           <>
             <Link to="/dashboard">ダッシュボード</Link>
+            <Link to="/youtube">動画一覧</Link>
             <Link to="/profile">プロフィール</Link>
             <Link to="/admin">管理者</Link>
             <span style={{ color: '#666' }}>{user.name}さん</span>
