@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { dbGet, dbRun, dbAll } from '../database';
 import { body, validationResult } from 'express-validator';
+import { sendApprovalEmail, sendRejectionEmail } from '../utils/email';
 
 const router = express.Router();
 
@@ -71,6 +72,9 @@ router.post(
         );
       }
 
+      // 承認完了メールを送信
+      await sendApprovalEmail(user.email, user.name);
+
       res.json({ message: 'ユーザーを承認しました' });
     } catch (error) {
       console.error('承認エラー:', error);
@@ -94,7 +98,16 @@ router.post(
 
       const { userId } = req.body;
 
+      // ユーザー情報を取得（メール送信用）
+      const user = await dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+      if (!user) {
+        return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      }
+
       await dbRun('UPDATE users SET status = ? WHERE id = ?', ['rejected', userId]);
+
+      // 拒否通知メールを送信
+      await sendRejectionEmail(user.email, user.name);
 
       res.json({ message: 'ユーザーを拒否しました' });
     } catch (error) {
