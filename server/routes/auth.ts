@@ -86,8 +86,11 @@ router.post(
       // パスワード検証
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
+        console.log(`ログイン失敗: ${email} - パスワード不一致`);
         return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
       }
+      
+      console.log(`ログイン成功: ${email} - ${user.name}`);
 
       // JWTトークン生成
       const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
