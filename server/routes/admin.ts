@@ -120,4 +120,50 @@ router.get('/all-users', authenticateToken, checkAdmin, async (req: AuthRequest,
   }
 });
 
+// 会員タイプ変更
+router.post(
+  '/update-membership-type',
+  authenticateToken,
+  checkAdmin,
+  [
+    body('userId').isInt().withMessage('ユーザーIDが必要です'),
+    body('membershipType').isIn(['basic', 'vip', 'admin']).withMessage('有効な会員タイプを指定してください'),
+  ],
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { userId, membershipType } = req.body;
+
+      // ユーザー存在確認
+      const user = await dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+      if (!user) {
+        return res.status(404).json({ error: 'ユーザーが見つかりません' });
+      }
+
+      // 会員プロフィールを確認・更新
+      const profile = await dbGet('SELECT * FROM member_profiles WHERE userId = ?', [userId]);
+      if (profile) {
+        await dbRun(
+          'UPDATE member_profiles SET membershipType = ?, updatedAt = CURRENT_TIMESTAMP WHERE userId = ?',
+          [membershipType, userId]
+        );
+      } else {
+        await dbRun(
+          'INSERT INTO member_profiles (userId, membershipType, status) VALUES (?, ?, ?)',
+          [userId, membershipType, 'active']
+        );
+      }
+
+      res.json({ message: '会員タイプを更新しました' });
+    } catch (error) {
+      console.error('会員タイプ更新エラー:', error);
+      res.status(500).json({ error: 'サーバーエラーが発生しました' });
+    }
+  }
+);
+
 export { router as adminRoutes };

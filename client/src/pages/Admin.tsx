@@ -80,6 +80,25 @@ function Admin() {
     }
   };
 
+  const handleUpdateMembershipType = async (userId: number, membershipType: string) => {
+    if (!window.confirm(`このユーザーの会員タイプを「${membershipType}」に変更しますか？`)) {
+      return;
+    }
+    try {
+      await axios.post(
+        `${API_URL}/admin/update-membership-type`,
+        { userId, membershipType },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSuccess('会員タイプを更新しました');
+      fetchUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.error || '会員タイプの更新に失敗しました');
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -160,6 +179,7 @@ function Admin() {
                     <th style={{ padding: '12px', textAlign: 'left' }}>ステータス</th>
                     <th style={{ padding: '12px', textAlign: 'left' }}>会員タイプ</th>
                     <th style={{ padding: '12px', textAlign: 'left' }}>登録日</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -194,9 +214,55 @@ function Admin() {
                             : '拒否'}
                         </span>
                       </td>
-                      <td style={{ padding: '12px' }}>{user.membershipType || 'basic'}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            background:
+                              user.membershipType === 'admin'
+                                ? '#d1ecf1'
+                                : user.membershipType === 'vip'
+                                ? '#fff3cd'
+                                : '#e2e3e5',
+                            color:
+                              user.membershipType === 'admin'
+                                ? '#0c5460'
+                                : user.membershipType === 'vip'
+                                ? '#856404'
+                                : '#383d41',
+                          }}
+                        >
+                          {user.membershipType === 'admin'
+                            ? '管理者'
+                            : user.membershipType === 'vip'
+                            ? 'VIP'
+                            : 'Basic'}
+                        </span>
+                      </td>
                       <td style={{ padding: '12px' }}>
                         {new Date(user.createdAt).toLocaleDateString('ja-JP')}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        {user.status === 'approved' && (
+                          <select
+                            value={user.membershipType || 'basic'}
+                            onChange={(e) => handleUpdateMembershipType(user.id, e.target.value)}
+                            style={{
+                              padding: '6px 12px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              fontSize: '14px',
+                              background: 'white',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <option value="basic">Basic</option>
+                            <option value="vip">VIP</option>
+                            <option value="admin">管理者</option>
+                          </select>
+                        )}
                       </td>
                     </tr>
                   ))}
