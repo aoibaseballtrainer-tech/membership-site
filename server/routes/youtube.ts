@@ -5,21 +5,38 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
-// 管理者権限チェック
+// 管理者権限チェック（adminのみ）
 async function checkAdmin(req: AuthRequest, res: Response, next: any) {
   try {
     const userId = req.userId!;
+    
+    // ユーザー情報を取得
+    const user = await dbGet('SELECT email FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      return res.status(403).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    // 小川葵のメールアドレスを確認
+    const adminEmail = 'aoi.baseball.trainer@gmail.com';
+    if (user.email === adminEmail) {
+      // 小川葵は常に管理者権限を持つ
+      next();
+      return;
+    }
+
+    // その他のユーザーはadmin権限をチェック
     const profile = await dbGet(
       'SELECT membershipType FROM member_profiles WHERE userId = ?',
       [userId]
     );
 
-    if (profile?.membershipType !== 'vip' && profile?.membershipType !== 'admin') {
+    if (profile?.membershipType !== 'admin') {
       return res.status(403).json({ error: '管理者権限が必要です' });
     }
 
     next();
   } catch (error) {
+    console.error('管理者権限チェックエラー:', error);
     res.status(500).json({ error: 'サーバーエラーが発生しました' });
   }
 }

@@ -24,13 +24,14 @@ interface YouTubeLink {
 }
 
 function Admin() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [youtubeLinks, setYoutubeLinks] = useState<YouTubeLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showYoutubeForm, setShowYoutubeForm] = useState(false);
   const [editingLink, setEditingLink] = useState<YouTubeLink | null>(null);
   const [youtubeFormData, setYoutubeFormData] = useState({
@@ -54,6 +55,12 @@ function Admin() {
 
   const fetchUsers = async () => {
     try {
+      // 小川葵のメールアドレスを確認
+      const adminEmail = 'aoi.baseball.trainer@gmail.com';
+      if (user?.email === adminEmail) {
+        setIsAdmin(true);
+      }
+
       const [pendingRes, allRes] = await Promise.all([
         axios.get(`${API_URL}/admin/pending-users`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -64,8 +71,16 @@ function Admin() {
       ]);
       setPendingUsers(pendingRes.data.users || []);
       setAllUsers(allRes.data.users || []);
+      
+      // 管理者権限を確認（レスポンスが成功した場合は管理者）
+      setIsAdmin(true);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'ユーザー一覧の取得に失敗しました');
+      if (err.response?.status === 403) {
+        setError('管理者権限が必要です。このページにアクセスする権限がありません。');
+        setIsAdmin(false);
+      } else {
+        setError(err.response?.data?.error || 'ユーザー一覧の取得に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -248,13 +263,30 @@ function Admin() {
     );
   }
 
+  if (!isAdmin && error.includes('管理者権限')) {
+    return (
+      <>
+        <Navbar />
+        <div className="container">
+          <div className="card">
+            <h1>管理者画面</h1>
+            <div className="error">{error}</div>
+            <p style={{ marginTop: '20px' }}>
+              このページにアクセスするには管理者権限が必要です。
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
       <div className="container">
         <div className="card">
           <h1>管理者画面</h1>
-          {error && <div className="error">{error}</div>}
+          {error && !error.includes('管理者権限') && <div className="error">{error}</div>}
           {success && <div className="success">{success}</div>}
 
           <div style={{ marginTop: '30px' }}>

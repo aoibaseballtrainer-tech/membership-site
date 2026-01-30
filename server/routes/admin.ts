@@ -7,21 +7,38 @@ import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
-// 管理者権限チェック
+// 管理者権限チェック（adminのみ）
 async function checkAdmin(req: AuthRequest, res: Response, next: any) {
   try {
     const userId = req.userId!;
+    
+    // ユーザー情報を取得
+    const user = await dbGet('SELECT email FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      return res.status(403).json({ error: 'ユーザーが見つかりません' });
+    }
+
+    // 小川葵のメールアドレスを確認
+    const adminEmail = 'aoi.baseball.trainer@gmail.com';
+    if (user.email === adminEmail) {
+      // 小川葵は常に管理者権限を持つ
+      next();
+      return;
+    }
+
+    // その他のユーザーはadmin権限をチェック
     const profile = await dbGet(
       'SELECT membershipType FROM member_profiles WHERE userId = ?',
       [userId]
     );
 
-    if (profile?.membershipType !== 'vip' && profile?.membershipType !== 'admin') {
+    if (profile?.membershipType !== 'admin') {
       return res.status(403).json({ error: '管理者権限が必要です' });
     }
 
     next();
   } catch (error) {
+    console.error('管理者権限チェックエラー:', error);
     res.status(500).json({ error: 'サーバーエラーが発生しました' });
   }
 }
@@ -236,19 +253,43 @@ router.post(
 // ユーザー削除
 router.delete('/delete-user/:userId', authenticateToken, checkAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const currentUserId = req.userId!;
+    const targetUserId = parseInt(req.params.userId);
 
-    // ユーザー存在確認
-    const user = await dbGet('SELECT * FROM users WHERE id = ?', [userId]);
-    if (!user) {
+    // 現在のユーザー情報を取得
+    const currentUser = await dbGet('SELECT email FROM users WHERE id = ?', [currentUserId]);
+    if (!currentUser) {
+      return res.status(403).json({ error: '認証エラーが発生しました' });
+    }
+
+    // 削除対象のユーザー存在確認
+    const targetUser = await dbGet('SELECT * FROM users WHERE id = ?', [targetUserId]);
+    if (!targetUser) {
       return res.status(404).json({ error: 'ユーザーが見つかりません' });
     }
 
+    // 小川葵のアカウントは削除不可
+    const adminEmail = 'aoi.baseball.trainer@gmail.com';
+    if (targetUser.email === adminEmail) {
+      return res.status(403).json({ error: 'このアカウントは削除できません' });
+    }
+
+    // 自分自身を削除しようとした場合
+    if (currentUserId === targetUserId) {
+      return res.status(403).json({ error: '自分自身を削除することはできません' });
+    }
+
+    // 他の管理者を削除しようとした場合（小川葵以外の管理者は削除可能）
+    const targetProfile = await dbGet('SELECT membershipType FROM member_profiles WHERE userId = ?', [targetUserId]);
+    if (targetProfile?.membershipType === 'admin' && currentUser.email !== adminEmail) {
+      return res.status(403).json({ error: '他の管理者を削除する権限がありません' });
+    }
+
     // 会員プロフィールを削除
-    await dbRun('DELETE FROM member_profiles WHERE userId = ?', [userId]);
+    await dbRun('DELETE FROM member_profiles WHERE userId = ?', [targetUserId]);
     
     // ユーザーを削除
-    await dbRun('DELETE FROM users WHERE id = ?', [userId]);
+    await dbRun('DELETE FROM users WHERE id = ?', [targetUserId]);
 
     res.json({ message: 'ユーザーを削除しました' });
   } catch (error) {
