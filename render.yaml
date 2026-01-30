@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: membership-site-backend
+    env: node
+    buildCommand: cd server && npm install && npm run build
+    startCommand: cd server && node dist/index.js
+    envVars:
+      - key: DATABASE_DIR
+        value: /opt/render/project/src/server/data
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_SERVICE
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: FRONTEND_URL
+        value: https://membership-site-frontend.onrender.com
+
+  - type: web
+    name: membership-site-frontend
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
