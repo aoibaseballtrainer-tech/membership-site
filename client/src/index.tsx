@@ -31,13 +31,22 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
 });
 
+console.log('[index.tsx] Starting app initialization...');
+console.log('[index.tsx] React version:', React.version);
+console.log('[index.tsx] NODE_ENV:', process.env.NODE_ENV);
+console.log('[index.tsx] REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+
 const rootElement = document.getElementById('root');
+console.log('[index.tsx] Root element found:', !!rootElement);
+
 if (!rootElement) {
+  console.error('[index.tsx] Root element not found! Creating new one...');
   // root要素が見つからない場合、bodyに直接追加
   const newRoot = document.createElement('div');
   newRoot.id = 'root';
   document.body.appendChild(newRoot);
   const root = ReactDOM.createRoot(newRoot);
+  console.log('[index.tsx] Rendering app to new root element...');
   root.render(
     <React.StrictMode>
       <App />
@@ -45,9 +54,12 @@ if (!rootElement) {
   );
 } else {
   const root = ReactDOM.createRoot(rootElement);
+  console.log('[index.tsx] Rendering app to existing root element...');
   root.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
   );
 }
+
+console.log('[index.tsx] App initialization complete');

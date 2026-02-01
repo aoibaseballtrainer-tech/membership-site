@@ -9,22 +9,27 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
 
-  // ローディング中のタイムアウト（10秒でタイムアウト）
+  // ローディング中のタイムアウト（5秒でタイムアウト）
   const [timeoutReached, setTimeoutReached] = React.useState(false);
 
   React.useEffect(() => {
+    console.log('[ProtectedRoute] Loading state:', loading, 'User:', !!user);
+    
     if (loading) {
+      console.log('[ProtectedRoute] Setting timeout for loading state');
       const timeoutId = setTimeout(() => {
-        console.warn('Loading timeout reached');
+        console.warn('[ProtectedRoute] Loading timeout reached - redirecting to login');
         setTimeoutReached(true);
-      }, 10000); // 10秒でタイムアウト
+      }, 5000); // 5秒でタイムアウト
 
       return () => clearTimeout(timeoutId);
     } else {
+      console.log('[ProtectedRoute] Loading completed, user:', !!user);
       setTimeoutReached(false);
     }
-  }, [loading]);
+  }, [loading, user]);
 
+  // ローディング中は短いローディング画面を表示
   if (loading && !timeoutReached) {
     return (
       <div style={{ 
@@ -32,15 +37,29 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
         flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: '#f9fafb'
+        minHeight: '100vh',
+        backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
       }}>
-        <div style={{ fontSize: '18px', marginBottom: '10px' }}>読み込み中...</div>
-        <div style={{ fontSize: '14px', color: '#6b7280' }}>しばらくお待ちください</div>
+        <div style={{ 
+          fontSize: '18px', 
+          marginBottom: '10px',
+          color: 'white',
+          fontWeight: '500'
+        }}>
+          読み込み中...
+        </div>
+        <div style={{ 
+          fontSize: '14px', 
+          color: 'rgba(255, 255, 255, 0.8)' 
+        }}>
+          しばらくお待ちください
+        </div>
       </div>
     );
   }
 
+  // タイムアウトまたはユーザーがいない場合はログインページにリダイレクト
   if (timeoutReached || !user) {
     return <Navigate to="/login" replace />;
   }
