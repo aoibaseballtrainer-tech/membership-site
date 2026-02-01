@@ -24,8 +24,12 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   // 本番環境の場合はバックエンドのURLを推測
-  if (window.location.hostname.includes('onrender.com')) {
-    return 'https://membership-site-sc6b.onrender.com/api';
+  try {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname.includes('onrender.com')) {
+      return 'https://membership-site-sc6b.onrender.com/api';
+    }
+  } catch (e) {
+    console.warn('window.location access failed:', e);
   }
   // ローカル開発環境
   return 'http://localhost:5001/api';
