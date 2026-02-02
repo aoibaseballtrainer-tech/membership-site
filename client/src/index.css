@@ -5,8 +5,10 @@
 }
 
 html {
-  height: 100%;
-  min-height: 100vh;
+  height: 100% !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  display: block !important;
 }
 
 body {
@@ -16,13 +18,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  height: 100%;
+  min-height: 100vh !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #root {
-  min-height: 100vh;
-  height: 100%;
+  min-height: 100vh !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: block !important;
 }
 
 code {
