@@ -58,34 +58,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedToken = localStorage.getItem('token');
     console.log('[AuthProvider] Saved token exists:', !!savedToken);
     
+    // 強制的にローディングを解除するタイムアウト（最大5秒）
+    const forceLoadingTimeout = setTimeout(() => {
+      console.warn('[AuthProvider] Force loading timeout - setting loading to false');
+      setLoading(false);
+    }, 5000);
+    
     if (savedToken) {
       setToken(savedToken);
       console.log('[AuthProvider] Verifying token...');
-      verifyToken(savedToken);
+      verifyToken(savedToken).finally(() => {
+        clearTimeout(forceLoadingTimeout);
+      });
     } else {
       // トークンがない場合は即座にローディングを解除
       console.log('[AuthProvider] No token found, setting loading to false');
+      clearTimeout(forceLoadingTimeout);
       setLoading(false);
     }
+    
+    return () => {
+      clearTimeout(forceLoadingTimeout);
+    };
   }, []);
 
-  const verifyToken = async (tokenToVerify: string) => {
+  const verifyToken = async (tokenToVerify: string): Promise<void> => {
     console.log('[AuthProvider] verifyToken called, API_URL:', API_URL);
     
-    // タイムアウトを短く設定（3秒でタイムアウト）
+    // タイムアウトを短く設定（2秒でタイムアウト）
     const timeoutId = setTimeout(() => {
       console.warn('[AuthProvider] Token verification timeout - clearing token');
       localStorage.removeItem('token');
       setToken(null);
       setUser(null);
       setLoading(false);
-    }, 3000); // 3秒でタイムアウト
+    }, 2000); // 2秒でタイムアウト
 
     try {
       console.log('[AuthProvider] Making API request to:', `${API_URL}/auth/verify`);
       const response = await axios.get(`${API_URL}/auth/verify`, {
         headers: { Authorization: `Bearer ${tokenToVerify}` },
-        timeout: 3000, // 3秒でタイムアウト
+        timeout: 2000, // 2秒でタイムアウト
       });
       clearTimeout(timeoutId);
       console.log('[AuthProvider] Token verification successful:', response.data);
