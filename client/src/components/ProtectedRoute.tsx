@@ -8,29 +8,34 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
-
-  // ローディング中のタイムアウト（5秒でタイムアウト）
-  const [timeoutReached, setTimeoutReached] = React.useState(false);
+  const [forceRedirect, setForceRedirect] = React.useState(false);
 
   React.useEffect(() => {
     console.log('[ProtectedRoute] Loading state:', loading, 'User:', !!user);
     
+    // ローディングが3秒以上続く場合は強制的にリダイレクト
     if (loading) {
       console.log('[ProtectedRoute] Setting timeout for loading state');
       const timeoutId = setTimeout(() => {
-        console.warn('[ProtectedRoute] Loading timeout reached - redirecting to login');
-        setTimeoutReached(true);
-      }, 5000); // 5秒でタイムアウト
+        console.warn('[ProtectedRoute] Loading timeout reached - forcing redirect to login');
+        setForceRedirect(true);
+      }, 3000); // 3秒でタイムアウト
 
       return () => clearTimeout(timeoutId);
     } else {
       console.log('[ProtectedRoute] Loading completed, user:', !!user);
-      setTimeoutReached(false);
+      setForceRedirect(false);
     }
   }, [loading, user]);
 
+  // 強制リダイレクトまたはユーザーがいない場合はログインページにリダイレクト
+  if (forceRedirect || (!loading && !user)) {
+    console.log('[ProtectedRoute] Redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
   // ローディング中は短いローディング画面を表示
-  if (loading && !timeoutReached) {
+  if (loading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -38,7 +43,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        width: '100%',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
       }}>
         <div style={{ 
@@ -59,12 +64,13 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // タイムアウトまたはユーザーがいない場合はログインページにリダイレクト
-  if (timeoutReached || !user) {
-    return <Navigate to="/login" replace />;
+  // ユーザーがいる場合は子要素を表示
+  if (user) {
+    return children;
   }
 
-  return children;
+  // 念のため、ログインページにリダイレクト
+  return <Navigate to="/login" replace />;
 }
 
 export default ProtectedRoute;

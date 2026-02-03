@@ -12,6 +12,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
 function App() {
+  console.log('[App] Rendering App component');
+  
   return (
     <ErrorBoundary>
       <AuthProvider>
