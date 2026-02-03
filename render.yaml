@@ -22,4 +22,4 @@ services:
     name: membership-site-frontend
     env: static
     buildCommand: cd client && npm install && npm run build
-    staticPublishPath: build
+    staticPublishPath: client/build
