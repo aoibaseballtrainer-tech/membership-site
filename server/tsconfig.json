@@ -15,5 +15,5 @@
     "noImplicitAny": false
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "create-admin.ts", "create-sample-data.ts"]
+  "exclude": ["node_modules", "dist", "create-admin.ts", "create-sample-data.ts", "seed-course.ts"]
 }

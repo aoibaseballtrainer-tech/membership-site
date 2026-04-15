@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
-import axios from 'axios';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -53,6 +52,11 @@ function Login() {
               ログイン
             </button>
           </form>
+          <p style={{ marginTop: '16px', textAlign: 'center' }}>
+            <Link to="/forgot-password" className="link">
+              パスワードを忘れた方はこちら
+            </Link>
+          </p>
           <p style={{ marginTop: '20px', textAlign: 'center' }}>
             アカウントをお持ちでない方は{' '}
             <Link to="/register" className="link">

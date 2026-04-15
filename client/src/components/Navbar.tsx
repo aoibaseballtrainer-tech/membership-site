@@ -13,6 +13,7 @@ function Navbar() {
           <>
             <Link to="/dashboard">ダッシュボード</Link>
             <Link to="/youtube">動画一覧</Link>
+            <Link to="/courses">教材コース</Link>
             <Link to="/profile">プロフィール</Link>
             <Link to="/admin">管理者</Link>
             <span style={{ color: '#666' }}>{user.name}さん</span>

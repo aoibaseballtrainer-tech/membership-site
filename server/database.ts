@@ -79,6 +79,18 @@ export function initDatabase() {
       )
     `);
 
+    db.run(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expiresAt DATETIME NOT NULL,
+        usedAt DATETIME,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id)
+      )
+    `);
+
     // 会員情報テーブル
     db.run(`
       CREATE TABLE IF NOT EXISTS member_profiles (
@@ -138,6 +150,52 @@ export function initDatabase() {
         description TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // コーステーブル
+    db.run(`
+      CREATE TABLE IF NOT EXISTS courses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        price INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'JPY',
+        thumbnailUrl TEXT,
+        isActive INTEGER NOT NULL DEFAULT 1,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // コース動画テーブル
+    db.run(`
+      CREATE TABLE IF NOT EXISTS course_videos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        courseId INTEGER NOT NULL,
+        categoryCode TEXT NOT NULL,
+        categoryName TEXT NOT NULL,
+        videoCode TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        videoUrl TEXT,
+        sortOrder INTEGER NOT NULL DEFAULT 0,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (courseId) REFERENCES courses(id)
+      )
+    `);
+
+    // ユーザー購入テーブル
+    db.run(`
+      CREATE TABLE IF NOT EXISTS user_purchases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        courseId INTEGER NOT NULL,
+        paymentMethod TEXT,
+        amount INTEGER NOT NULL DEFAULT 0,
+        purchasedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id),
+        FOREIGN KEY (courseId) REFERENCES courses(id)
       )
     `);
 

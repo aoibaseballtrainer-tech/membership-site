@@ -42,8 +42,8 @@ if (process.env.NODE_ENV === 'production' && !process.env.REACT_APP_API_URL) {
   console.warn('REACT_APP_API_URL環境変数が設定されていません。デフォルトURLを使用します:', API_URL);
 }
 
-// axiosのデフォルトタイムアウトを設定（短くする）
-axios.defaults.timeout = 3000; // 3秒
+// axiosのデフォルトタイムアウトを設定（スマホでも動作するように長めに設定）
+axios.defaults.timeout = 10000; // 10秒
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -58,11 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedToken = localStorage.getItem('token');
     console.log('[AuthProvider] Saved token exists:', !!savedToken);
     
-    // 強制的にローディングを解除するタイムアウト（最大5秒）
+    // 強制的にローディングを解除するタイムアウト（最大15秒）
     const forceLoadingTimeout = setTimeout(() => {
       console.warn('[AuthProvider] Force loading timeout - setting loading to false');
       setLoading(false);
-    }, 5000);
+    }, 15000);
     
     if (savedToken) {
       setToken(savedToken);
@@ -85,27 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyToken = async (tokenToVerify: string): Promise<void> => {
     console.log('[AuthProvider] verifyToken called, API_URL:', API_URL);
     
-    // タイムアウトを短く設定（2秒でタイムアウト）
-    const timeoutId = setTimeout(() => {
-      console.warn('[AuthProvider] Token verification timeout - clearing token');
-      localStorage.removeItem('token');
-      setToken(null);
-      setUser(null);
-      setLoading(false);
-    }, 2000); // 2秒でタイムアウト
-
     try {
       console.log('[AuthProvider] Making API request to:', `${API_URL}/auth/verify`);
       const response = await axios.get(`${API_URL}/auth/verify`, {
         headers: { Authorization: `Bearer ${tokenToVerify}` },
-        timeout: 2000, // 2秒でタイムアウト
+        timeout: 10000, // 10秒でタイムアウト（スマホでも動作するように）
       });
-      clearTimeout(timeoutId);
       console.log('[AuthProvider] Token verification successful:', response.data);
       setUser(response.data.user);
       setLoading(false);
     } catch (error: any) {
-      clearTimeout(timeoutId);
       console.error('[AuthProvider] Token verification failed:', error?.message || error);
       console.error('[AuthProvider] Error details:', {
         message: error?.message,
@@ -113,10 +102,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         response: error?.response?.data,
         status: error?.response?.status,
       });
-      // エラーが発生した場合、トークンを削除して即座にローディングを解除
-      localStorage.removeItem('token');
-      setToken(null);
-      setUser(null);
+      // ネットワークエラーやタイムアウトの場合は、トークンを保持してログインページにリダイレクト
+      // 401エラー（認証エラー）の場合のみトークンを削除
+      if (error?.response?.status === 401) {
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      } else {
+        // ネットワークエラーの場合はトークンを保持（オフライン時など）
+        setToken(tokenToVerify);
+      }
       setLoading(false);
     }
   };
@@ -124,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password }, {
-        timeout: 5000, // 5秒でタイムアウト
+        timeout: 10000, // 10秒でタイムアウト（スマホでも動作するように）
       });
       const { token: newToken, user: newUser } = response.data;
       setToken(newToken);
@@ -143,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         name,
       }, {
-        timeout: 5000, // 5秒でタイムアウト
+        timeout: 10000, // 10秒でタイムアウト（スマホでも動作するように）
       });
       const { token: newToken, user: newUser } = response.data;
       setToken(newToken);

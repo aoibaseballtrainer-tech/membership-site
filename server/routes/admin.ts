@@ -2,7 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { dbGet, dbRun, dbAll } from '../database';
 import { body, validationResult } from 'express-validator';
-import { sendApprovalEmail, sendRejectionEmail } from '../utils/email';
+import { sendApprovalEmail, sendRejectionEmail, sendWelcomeCredentialsEmail } from '../utils/email';
 import bcrypt from 'bcryptjs';
 
 const router = express.Router();
@@ -241,8 +241,7 @@ router.post(
         [result.lastID, membershipType, 'active']
       );
 
-      // 承認完了メールを送信
-      await sendApprovalEmail(email, name);
+      await sendWelcomeCredentialsEmail(email, name, password);
 
       const newUser = await dbGet('SELECT id, email, name, status FROM users WHERE id = ?', [result.lastID]);
       res.status(201).json({ message: 'ユーザーを作成しました', user: newUser });

@@ -13,13 +13,13 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   React.useEffect(() => {
     console.log('[ProtectedRoute] Loading state:', loading, 'User:', !!user);
     
-    // ローディングが3秒以上続く場合は強制的にリダイレクト
+    // ローディングが15秒以上続く場合は強制的にリダイレクト
     if (loading) {
       console.log('[ProtectedRoute] Setting timeout for loading state');
       const timeoutId = setTimeout(() => {
         console.warn('[ProtectedRoute] Loading timeout reached - forcing redirect to login');
         setForceRedirect(true);
-      }, 3000); // 3秒でタイムアウト
+      }, 15000); // 15秒でタイムアウト（スマホでも動作するように）
 
       return () => clearTimeout(timeoutId);
     } else {
